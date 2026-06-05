@@ -19,7 +19,7 @@ struct VisitorAddView: View {
 
     var body: some View {
         Form {
-            Section("Visitor情報") {
+            Section("参加者情報") {
                 TextField("名前", text: $name)
                 TextField("レベル（任意）", text: $level)
                 TextField("メモ（任意）", text: $memo, axis: .vertical)
@@ -30,7 +30,7 @@ struct VisitorAddView: View {
                 Section { ErrorBanner(message: errorMessage) }
             }
         }
-        .navigationTitle("Visitor追加")
+        .navigationTitle("今日だけ参加")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {

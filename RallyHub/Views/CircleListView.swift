@@ -3,7 +3,7 @@ import SwiftUI
 struct CircleListView: View {
     @Bindable private var auth = AuthService.shared
     @State private var viewModel = CircleListViewModel()
-    @State private var showProfileSettings = false
+    @State private var showAccountSettings = false
 
     var body: some View {
         NavigationStack {
@@ -32,29 +32,7 @@ struct CircleListView: View {
             .navigationTitle("サークル")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Menu {
-                        if !auth.name.isEmpty {
-                            Text(auth.name)
-                        }
-                        if let email = auth.currentUser?.email {
-                            Text(email)
-                                .font(.caption)
-                        }
-
-                        Button {
-                            showProfileSettings = true
-                        } label: {
-                            Label("表示名を編集", systemImage: "person.crop.circle")
-                        }
-
-                        Button(role: .destructive) {
-                            viewModel.logout()
-                        } label: {
-                            Label("ログアウト", systemImage: "rectangle.portrait.and.arrow.right")
-                        }
-                    } label: {
-                        Image(systemName: "gearshape")
-                    }
+                    AccountToolbarMenu(showAccountSettings: $showAccountSettings)
                 }
 
                 ToolbarItemGroup(placement: .topBarTrailing) {
@@ -92,8 +70,8 @@ struct CircleListView: View {
             .task {
                 await viewModel.load()
             }
-            .navigationDestination(isPresented: $showProfileSettings) {
-                ProfileSettingsView()
+            .navigationDestination(isPresented: $showAccountSettings) {
+                AccountSettingsView()
             }
         }
     }

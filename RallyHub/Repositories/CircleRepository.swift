@@ -35,12 +35,19 @@ final class CircleRepository {
         )
 
         let member = CircleMember(
+            documentId: CircleMember.documentId(circleId: circle.circleId, userId: ownerId),
             circleId: circle.circleId,
             userId: ownerId,
             role: .admin,
             userName: ownerName,
             rating: RatingDefaults.initialRating,
-            joinedAt: now
+            memberType: .registered,
+            level: nil,
+            notes: nil,
+            isActive: true,
+            createdBy: ownerId,
+            joinedAt: now,
+            updatedAt: now
         )
 
         let memberRef = db.collection(FirestoreCollections.circleMembers)
@@ -112,12 +119,19 @@ final class CircleRepository {
         }
 
         let member = CircleMember(
+            documentId: memberId,
             circleId: circle.circleId,
             userId: userId,
             role: .member,
             userName: userName,
             rating: RatingDefaults.initialRating,
-            joinedAt: Date()
+            memberType: .registered,
+            level: nil,
+            notes: nil,
+            isActive: true,
+            createdBy: userId,
+            joinedAt: Date(),
+            updatedAt: Date()
         )
 
         try await db.runTransaction { transaction, errorPointer in
@@ -147,6 +161,102 @@ final class CircleRepository {
         ])
     }
 
+    func fetchCircleMembers(circleId: String) async throws -> [CircleMember] {
+        let snapshot = try await db.collection(FirestoreCollections.circleMembers)
+            .whereField("circleId", isEqualTo: circleId)
+            .getDocuments()
+
+        return snapshot.documents
+            .compactMap { CircleMember.from($0) }
+            .sorted { $0.userName.localizedCaseInsensitiveCompare($1.userName) == .orderedAscending }
+    }
+
+    func createManualMember(
+        circleId: String,
+        displayName: String,
+        rating: Int = RatingDefaults.initialRating,
+        level: String?,
+        notes: String?,
+        createdBy: String
+    ) async throws -> CircleMember {
+        let trimmed = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            throw RallyHubError.invalidInput("表示名を入力してください")
+        }
+
+        let existing = try await fetchCircleMembers(circleId: circleId)
+        if existing.contains(where: { $0.userName.caseInsensitiveCompare(trimmed) == .orderedSame }) {
+            throw RallyHubError.invalidInput("同じ名前のメンバーが既にいます")
+        }
+
+        let memberId = UUID().uuidString.lowercased()
+        let documentId = CircleMember.manualDocumentId(circleId: circleId, memberId: memberId)
+        let now = Date()
+
+        let member = CircleMember(
+            documentId: documentId,
+            circleId: circleId,
+            userId: nil,
+            role: .member,
+            userName: trimmed,
+            rating: rating,
+            memberType: .manual,
+            level: level,
+            notes: notes?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty,
+            isActive: true,
+            createdBy: createdBy,
+            joinedAt: now,
+            updatedAt: now
+        )
+
+        try await db.collection(FirestoreCollections.circleMembers)
+            .document(documentId)
+            .setData(member.toDictionary(createdByUid: createdBy))
+
+        return member
+    }
+
+    func updateManualMember(
+        _ member: CircleMember,
+        displayName: String,
+        rating: Int,
+        level: String?,
+        notes: String?
+    ) async throws {
+        guard member.isManual else {
+            throw RallyHubError.invalidInput("手動登録メンバーのみ編集できます")
+        }
+
+        let trimmed = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            throw RallyHubError.invalidInput("表示名を入力してください")
+        }
+
+        try await db.collection(FirestoreCollections.circleMembers)
+            .document(member.documentId)
+            .updateData([
+                "userName": trimmed,
+                "displayName": trimmed,
+                "rating": rating,
+                "level": level ?? NSNull(),
+                "notes": notes?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty ?? NSNull(),
+                "updatedAt": Timestamp(date: .now),
+            ])
+    }
+
+    func deactivateManualMember(_ member: CircleMember) async throws {
+        guard member.isManual else {
+            throw RallyHubError.invalidInput("手動登録メンバーのみ削除できます")
+        }
+
+        try await db.collection(FirestoreCollections.circleMembers)
+            .document(member.documentId)
+            .updateData([
+                "isActive": false,
+                "updatedAt": Timestamp(date: .now),
+            ])
+    }
+
     func deleteCircle(circleId: String, ownerId: String) async throws {
         try await deleteDocuments(
             matching: db.collection(FirestoreCollections.eventParticipants)
@@ -163,6 +273,9 @@ final class CircleRepository {
         try await deleteDocuments(
             matching: db.collection(FirestoreCollections.announcements)
                 .whereField("circleId", isEqualTo: circleId)
+        )
+        try await deleteDocuments(
+            matching: db.collection("circleDayParticipants").whereField("circleId", isEqualTo: circleId)
         )
         try await deleteDocuments(
             matching: db.collection("circleRoster").whereField("circleId", isEqualTo: circleId)
@@ -238,5 +351,11 @@ final class CircleRepository {
         try await db.collection(FirestoreCollections.circleMembers)
             .document(CircleMember.documentId(circleId: circleId, userId: userId))
             .updateData(["role": role.firestoreValue])
+    }
+}
+
+private extension String {
+    var nilIfEmpty: String? {
+        isEmpty ? nil : self
     }
 }

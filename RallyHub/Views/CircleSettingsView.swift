@@ -45,6 +45,14 @@ struct CircleSettingsView: View {
                     }
                 }
 
+                Section {
+                    NavigationLink {
+                        CircleMembersView(membership: membership)
+                    } label: {
+                        LabeledContent("サークルメンバー", value: "\(membership.circle.memberCount) 人")
+                    }
+                }
+
                 Section("サークル情報") {
                     if canEdit {
                         TextField("サークル名", text: $name)

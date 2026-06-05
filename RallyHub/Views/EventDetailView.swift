@@ -165,7 +165,7 @@ struct EventDetailView: View {
                 }
                 GridRow {
                     statCell("保留", value: event.pendingCount)
-                    statCell("Visitor", value: event.visitorCount)
+                    statCell("今日だけ参加", value: event.visitorCount)
                 }
             }
 
@@ -219,11 +219,11 @@ struct EventDetailView: View {
     @ViewBuilder
     private var visitorsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Visitor")
+            Text("今日だけ参加")
                 .font(.headline)
 
             if viewModel.visitors.isEmpty {
-                Text("Visitor はいません")
+                Text("今日だけ参加の方はいません")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             } else {
