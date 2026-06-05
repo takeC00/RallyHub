@@ -95,6 +95,42 @@ final class AuthService {
         isReady = false
     }
 
+    func updateDisplayName(_ name: String) async throws {
+        guard configureIfNeeded() else { throw Self.configurationError }
+        guard let uid else {
+            throw NSError(
+                domain: "RallyHub",
+                code: -2,
+                userInfo: [NSLocalizedDescriptionKey: "ログイン情報が取得できません"]
+            )
+        }
+
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            throw NSError(
+                domain: "RallyHub",
+                code: -3,
+                userInfo: [NSLocalizedDescriptionKey: "表示名を入力してください"]
+            )
+        }
+
+        let now = Date()
+        try await db.collection(FirestoreCollections.users).document(uid).updateData([
+            "name": trimmed,
+            "updatedAt": Timestamp(date: now)
+        ])
+
+        let memberships = try await db.collection(FirestoreCollections.circleMembers)
+            .whereField("userId", isEqualTo: uid)
+            .getDocuments()
+
+        for document in memberships.documents {
+            try await document.reference.updateData(["userName": trimmed])
+        }
+
+        await fetchUserProfile(uid: uid)
+    }
+
     func saveFCMToken(_ token: String) async throws {
         guard let uid else { return }
 
