@@ -48,6 +48,7 @@ struct CircleJoinView: View {
                 LoadingOverlay(message: "参加中...")
             }
         }
+        .rallyDarkFormScreen()
     }
 
     private func join() async {

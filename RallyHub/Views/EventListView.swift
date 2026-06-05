@@ -100,6 +100,8 @@ struct EventListView: View {
                     ErrorBanner(message: error).padding()
                 }
             }
+            .rallyDarkScreenBackground()
+            .rallyDarkNavigationBar()
         }
     }
 }

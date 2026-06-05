@@ -65,6 +65,8 @@ struct AnnouncementListView: View {
                     ErrorBanner(message: error).padding()
                 }
             }
+            .rallyDarkScreenBackground()
+            .rallyDarkNavigationBar()
         }
     }
 }
@@ -113,6 +115,7 @@ struct AnnouncementCreateView: View {
                 LoadingOverlay(message: "投稿中...")
             }
         }
+        .rallyDarkFormScreen()
     }
 
     private func create() async {

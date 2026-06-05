@@ -23,6 +23,7 @@ struct RootView: View {
             }
         }
         .animation(.easeOut(duration: 1.5), value: showSplash)
+        .background(Color.black.ignoresSafeArea())
         .task {
             guard AppFirebaseConfig.isPlistConfigured else { return }
             auth.startAuthListener()

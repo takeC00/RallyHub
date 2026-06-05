@@ -94,6 +94,8 @@ struct CircleMembersView: View {
         } message: {
             Text(errorMessage)
         }
+        .rallyDarkScreenBackground()
+        .rallyDarkNavigationBar()
     }
 
     private func memberRow(_ member: CircleMember, subtitle: String) -> some View {
@@ -183,6 +185,7 @@ struct ManualMemberAddView: View {
             .overlay {
                 if isSaving { LoadingOverlay(message: "保存中...") }
             }
+            .rallyDarkFormScreen()
         }
     }
 
@@ -271,6 +274,7 @@ struct ManualMemberEditView: View {
             }
             Button("キャンセル", role: .cancel) {}
         }
+        .rallyDarkFormScreen()
     }
 
     private func save() async {

@@ -84,6 +84,7 @@ struct AccountSettingsView: View {
         }
         .navigationTitle("アカウント")
         .navigationBarTitleDisplayMode(.inline)
+        .rallyDarkFormScreen()
         .toolbar {
             if showsDismissButton {
                 ToolbarItem(placement: .cancellationAction) {

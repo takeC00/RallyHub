@@ -57,10 +57,10 @@ final class CircleRepository {
         try await db.runTransaction { transaction, errorPointer in
             transaction.setData(circle.toDictionary(), forDocument: circleRef)
             transaction.setData(member.toDictionary(), forDocument: memberRef)
-            transaction.updateData([
+            transaction.setData([
                 "currentCircleId": circleId,
                 "updatedAt": Timestamp(date: now)
-            ], forDocument: userRef)
+            ], forDocument: userRef, merge: true)
             return nil
         }
 
@@ -283,19 +283,11 @@ final class CircleRepository {
         try await deleteDocuments(
             matching: db.collection("matches").whereField("circleId", isEqualTo: circleId)
         )
+        try await deleteDocuments(
+            matching: db.collection("ratingSnapshots").whereField("circleId", isEqualTo: circleId)
+        )
 
-        let sessions = try await db.collection("sessions")
-            .whereField("circleId", isEqualTo: circleId)
-            .getDocuments()
-        for document in sessions.documents {
-            try await deleteSession(document.documentID)
-        }
-
-        let stableSessionId = circleId.lowercased()
-        let stableRef = db.collection("sessions").document(stableSessionId)
-        if (try await stableRef.getDocument()).exists {
-            try await deleteSession(stableSessionId)
-        }
+        await deleteSessions(for: circleId)
 
         try await deleteDocuments(
             matching: db.collection(FirestoreCollections.circleMembers)
@@ -311,6 +303,22 @@ final class CircleRepository {
                 "currentCircleId": FieldValue.delete(),
                 "updatedAt": Timestamp(date: Date())
             ])
+        }
+    }
+
+    private func deleteSessions(for circleId: String) async {
+        let stableSessionId = circleId.lowercased()
+        try? await deleteSession(stableSessionId)
+
+        do {
+            let sessions = try await db.collection("sessions")
+                .whereField("circleId", isEqualTo: circleId)
+                .getDocuments()
+            for document in sessions.documents where document.documentID != stableSessionId {
+                try await deleteSession(document.documentID)
+            }
+        } catch {
+            // stableSessionId の削除だけでも通常は十分
         }
     }
 

@@ -73,6 +73,8 @@ struct CircleListView: View {
             .navigationDestination(isPresented: $showAccountSettings) {
                 AccountSettingsView()
             }
+            .rallyDarkScreenBackground()
+            .rallyDarkNavigationBar()
         }
     }
 }

@@ -123,6 +123,7 @@ struct CircleSettingsView: View {
             } message: {
                 Text("「\(membership.circle.name)」と関連データがすべて削除されます。この操作は取り消せません。")
             }
+            .rallyDarkFormScreen()
         }
     }
 
