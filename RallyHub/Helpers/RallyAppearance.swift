@@ -25,6 +25,10 @@ enum RallyAppearance {
         UINavigationBar.appearance().scrollEdgeAppearance = navBar
         UINavigationBar.appearance().compactAppearance = navBar
         UINavigationBar.appearance().tintColor = .white
+
+        UILabel.appearance(whenContainedInInstancesOf: [UITableViewCell.self]).textColor = .white
+        UITextField.appearance(whenContainedInInstancesOf: [UITableViewCell.self]).textColor = .white
+        UITextView.appearance(whenContainedInInstancesOf: [UITableViewCell.self]).textColor = .white
     }
 }
 
@@ -32,6 +36,8 @@ extension View {
     func rallyDarkScreenBackground() -> some View {
         scrollContentBackground(.hidden)
             .background(Color.black.ignoresSafeArea())
+            .foregroundStyle(.white)
+            .tint(.white)
     }
 
     func rallyDarkNavigationBar() -> some View {
@@ -43,5 +49,11 @@ extension View {
     func rallyDarkFormScreen() -> some View {
         rallyDarkScreenBackground()
             .rallyDarkNavigationBar()
+    }
+
+    func rallyLightCardContent() -> some View {
+        foregroundStyle(.black)
+            .tint(.blue)
+            .colorScheme(.light)
     }
 }

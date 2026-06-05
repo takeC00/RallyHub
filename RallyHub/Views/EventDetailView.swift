@@ -80,6 +80,8 @@ struct EventDetailView: View {
             viewModel.startListening()
             await viewModel.load()
         }
+        .rallyDarkScreenBackground()
+        .rallyDarkNavigationBar()
     }
 
     @ViewBuilder
@@ -131,7 +133,7 @@ struct EventDetailView: View {
                             .background(
                                 viewModel.myParticipant?.status == status
                                     ? Color.orange.opacity(0.2)
-                                    : Color(.secondarySystemGroupedBackground),
+                                    : RallyScreenStyle.rowBackground,
                                 in: RoundedRectangle(cornerRadius: 10)
                             )
                     }
@@ -149,7 +151,7 @@ struct EventDetailView: View {
             }
         }
         .padding()
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
+        .background(RallyScreenStyle.rowBackground, in: RoundedRectangle(cornerRadius: 14))
     }
 
     @ViewBuilder
@@ -176,7 +178,7 @@ struct EventDetailView: View {
             }
         }
         .padding()
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
+        .background(RallyScreenStyle.rowBackground, in: RoundedRectangle(cornerRadius: 14))
     }
 
     private func statCell(_ title: String, value: Int) -> some View {
@@ -266,5 +268,6 @@ struct ParticipantListView: View {
         }
         .navigationTitle("参加者一覧")
         .navigationBarTitleDisplayMode(.inline)
+        .rallyDarkFormScreen()
     }
 }

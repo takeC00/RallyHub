@@ -40,9 +40,10 @@ struct EmptyStateView: View {
                 .foregroundStyle(.secondary)
             Text(title)
                 .font(.headline)
+                .foregroundStyle(.white)
             Text(message)
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.gray)
                 .multilineTextAlignment(.center)
         }
         .padding()
@@ -59,7 +60,7 @@ struct ErrorBanner: View {
                 .foregroundStyle(.red)
             Text(message)
                 .font(.caption)
-                .foregroundStyle(.primary)
+                .foregroundStyle(.white)
             Spacer()
         }
         .padding(12)
