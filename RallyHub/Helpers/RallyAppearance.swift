@@ -7,8 +7,10 @@ enum RallyScreenStyle {
 
 enum RallyAppearance {
     static func configure() {
-        UIScrollView.appearance().backgroundColor = .black
-        UITableView.appearance().backgroundColor = .black
+        // キーボード表示時に黒い帯が出ないよう、UIKit スクロール背景は透明にする
+        UIScrollView.appearance().backgroundColor = .clear
+        UITableView.appearance().backgroundColor = .clear
+        UITableViewCell.appearance().backgroundColor = .clear
 
         let tabBar = UITabBarAppearance()
         tabBar.configureWithOpaqueBackground()
@@ -28,7 +30,9 @@ enum RallyAppearance {
 
         UILabel.appearance(whenContainedInInstancesOf: [UITableViewCell.self]).textColor = .white
         UITextField.appearance(whenContainedInInstancesOf: [UITableViewCell.self]).textColor = .white
+        UITextField.appearance(whenContainedInInstancesOf: [UITableViewCell.self]).backgroundColor = .clear
         UITextView.appearance(whenContainedInInstancesOf: [UITableViewCell.self]).textColor = .white
+        UITextView.appearance(whenContainedInInstancesOf: [UITableViewCell.self]).backgroundColor = .clear
 
         UISwitch.appearance().onTintColor = .systemGreen
     }
@@ -37,7 +41,11 @@ enum RallyAppearance {
 extension View {
     func rallyDarkScreenBackground() -> some View {
         scrollContentBackground(.hidden)
-            .background(Color.black.ignoresSafeArea())
+            .background {
+                Color.black
+                    .ignoresSafeArea()
+                    .ignoresSafeArea(.keyboard, edges: .bottom)
+            }
             .foregroundStyle(.white)
     }
 
