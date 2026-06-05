@@ -147,33 +147,91 @@ final class CircleRepository {
         ])
     }
 
-    func deleteCircle(circleId: String) async throws {
-        let events = try await db.collection(FirestoreCollections.events)
+    func deleteCircle(circleId: String, ownerId: String) async throws {
+        try await deleteDocuments(
+            matching: db.collection(FirestoreCollections.eventParticipants)
+                .whereField("circleId", isEqualTo: circleId)
+        )
+        try await deleteDocuments(
+            matching: db.collection(FirestoreCollections.eventVisitors)
+                .whereField("circleId", isEqualTo: circleId)
+        )
+        try await deleteDocuments(
+            matching: db.collection(FirestoreCollections.events)
+                .whereField("circleId", isEqualTo: circleId)
+        )
+        try await deleteDocuments(
+            matching: db.collection(FirestoreCollections.announcements)
+                .whereField("circleId", isEqualTo: circleId)
+        )
+        try await deleteDocuments(
+            matching: db.collection("circleRoster").whereField("circleId", isEqualTo: circleId)
+        )
+        try await deleteDocuments(
+            matching: db.collection("matches").whereField("circleId", isEqualTo: circleId)
+        )
+
+        let sessions = try await db.collection("sessions")
             .whereField("circleId", isEqualTo: circleId)
             .getDocuments()
-
-        let members = try await db.collection(FirestoreCollections.circleMembers)
-            .whereField("circleId", isEqualTo: circleId)
-            .getDocuments()
-
-        let announcements = try await db.collection(FirestoreCollections.announcements)
-            .whereField("circleId", isEqualTo: circleId)
-            .getDocuments()
-
-        let batch = db.batch()
-
-        for doc in events.documents {
-            batch.deleteDocument(doc.reference)
+        for document in sessions.documents {
+            try await deleteSession(document.documentID)
         }
-        for doc in members.documents {
-            batch.deleteDocument(doc.reference)
-        }
-        for doc in announcements.documents {
-            batch.deleteDocument(doc.reference)
-        }
-        batch.deleteDocument(db.collection(FirestoreCollections.circles).document(circleId))
 
-        try await batch.commit()
+        let stableSessionId = circleId.lowercased()
+        let stableRef = db.collection("sessions").document(stableSessionId)
+        if (try await stableRef.getDocument()).exists {
+            try await deleteSession(stableSessionId)
+        }
+
+        try await deleteDocuments(
+            matching: db.collection(FirestoreCollections.circleMembers)
+                .whereField("circleId", isEqualTo: circleId)
+        )
+
+        try await db.collection(FirestoreCollections.circles).document(circleId).delete()
+
+        let userRef = db.collection(FirestoreCollections.users).document(ownerId)
+        let userDoc = try await userRef.getDocument()
+        if userDoc.data()?["currentCircleId"] as? String == circleId {
+            try await userRef.updateData([
+                "currentCircleId": FieldValue.delete(),
+                "updatedAt": Timestamp(date: Date())
+            ])
+        }
+    }
+
+    private func deleteDocuments(matching query: Query) async throws {
+        while true {
+            let snapshot = try await query.limit(to: 300).getDocuments()
+            if snapshot.isEmpty { return }
+
+            let batch = db.batch()
+            for document in snapshot.documents {
+                batch.deleteDocument(document.reference)
+            }
+            try await batch.commit()
+        }
+    }
+
+    private func deleteSession(_ sessionId: String) async throws {
+        let sessionRef = db.collection("sessions").document(sessionId)
+        try await deleteCollection(sessionRef.collection("matches"))
+        try await deleteCollection(sessionRef.collection("sessionPlayers"))
+        try await sessionRef.delete()
+    }
+
+    private func deleteCollection(_ collection: CollectionReference) async throws {
+        while true {
+            let snapshot = try await collection.limit(to: 300).getDocuments()
+            if snapshot.isEmpty { return }
+
+            let batch = db.batch()
+            for document in snapshot.documents {
+                batch.deleteDocument(document.reference)
+            }
+            try await batch.commit()
+        }
     }
 
     func updateMemberRole(circleId: String, userId: String, role: CircleRole) async throws {

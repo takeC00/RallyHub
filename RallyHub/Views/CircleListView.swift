@@ -19,7 +19,9 @@ struct CircleListView: View {
                 } else {
                     List(viewModel.memberships) { item in
                         NavigationLink {
-                            CircleHomeView(membership: item)
+                            CircleHomeView(membership: item) {
+                                Task { await viewModel.load() }
+                            }
                         } label: {
                             CircleRowView(membership: item)
                         }
@@ -129,6 +131,9 @@ struct CircleRowView: View {
 
 struct CircleHomeView: View {
     let membership: CircleMembership
+    var onCircleDeleted: () -> Void = {}
+
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         TabView {
@@ -142,7 +147,10 @@ struct CircleHomeView: View {
                     Label("お知らせ", systemImage: "megaphone")
                 }
 
-            CircleSettingsView(membership: membership)
+            CircleSettingsView(membership: membership, onDeleted: {
+                onCircleDeleted()
+                dismiss()
+            })
                 .tabItem {
                     Label("設定", systemImage: "gearshape")
                 }

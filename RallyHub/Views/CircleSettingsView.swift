@@ -2,6 +2,9 @@ import SwiftUI
 
 struct CircleSettingsView: View {
     let membership: CircleMembership
+    var onDeleted: (() -> Void)? = nil
+
+    @Bindable private var auth = AuthService.shared
 
     @State private var name: String
     @State private var sportName: String
@@ -22,6 +25,10 @@ struct CircleSettingsView: View {
 
     private var canEdit: Bool {
         membership.membership.role.canEditCircle
+    }
+
+    private var canDelete: Bool {
+        auth.uid == membership.circle.ownerId
     }
 
     var body: some View {
@@ -69,11 +76,13 @@ struct CircleSettingsView: View {
                     }
                 }
 
-                if canEdit {
+                if canDelete {
                     Section {
                         Button("サークルを削除", role: .destructive) {
                             showDeleteConfirm = true
                         }
+                    } footer: {
+                        Text("オーナーのみ削除できます。イベント・お知らせ・試合データもすべて削除されます。")
                     }
                 }
 
@@ -103,7 +112,7 @@ struct CircleSettingsView: View {
                 }
                 Button("キャンセル", role: .cancel) {}
             } message: {
-                Text("イベントやお知らせも削除されます。この操作は取り消せません。")
+                Text("「\(membership.circle.name)」と関連データがすべて削除されます。この操作は取り消せません。")
             }
         }
     }
@@ -134,7 +143,14 @@ struct CircleSettingsView: View {
         defer { isLoading = false }
 
         do {
-            try await CircleRepository.shared.deleteCircle(circleId: membership.circle.circleId)
+            guard let ownerId = auth.uid else {
+                throw RallyHubError.invalidInput("ログイン情報が取得できません")
+            }
+            try await CircleRepository.shared.deleteCircle(
+                circleId: membership.circle.circleId,
+                ownerId: ownerId
+            )
+            onDeleted?()
         } catch {
             errorMessage = error.localizedDescription
         }
