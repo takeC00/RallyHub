@@ -29,6 +29,8 @@ enum RallyAppearance {
         UILabel.appearance(whenContainedInInstancesOf: [UITableViewCell.self]).textColor = .white
         UITextField.appearance(whenContainedInInstancesOf: [UITableViewCell.self]).textColor = .white
         UITextView.appearance(whenContainedInInstancesOf: [UITableViewCell.self]).textColor = .white
+
+        UISwitch.appearance().onTintColor = .systemGreen
     }
 }
 
@@ -37,7 +39,6 @@ extension View {
         scrollContentBackground(.hidden)
             .background(Color.black.ignoresSafeArea())
             .foregroundStyle(.white)
-            .tint(.white)
     }
 
     func rallyDarkNavigationBar() -> some View {

@@ -19,6 +19,7 @@ struct EventListView: View {
                     }
                 }
                 .pickerStyle(.segmented)
+                .tint(.orange)
                 .padding()
 
                 Group {
