@@ -15,8 +15,9 @@ struct CircleSettingsView: View {
     @State private var successMessage = ""
     @State private var showDeleteConfirm = false
 
-    init(membership: CircleMembership) {
+    init(membership: CircleMembership, onDeleted: (() -> Void)? = nil) {
         self.membership = membership
+        self.onDeleted = onDeleted
         _name = State(initialValue: membership.circle.name)
         _sportName = State(initialValue: membership.circle.sportName)
         _description = State(initialValue: membership.circle.description)

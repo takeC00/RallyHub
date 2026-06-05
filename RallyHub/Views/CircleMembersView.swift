@@ -24,17 +24,19 @@ struct CircleMembersView: View {
     var body: some View {
         List {
             if !registeredMembers.isEmpty {
-                Section("アカウントメンバー") {
+                Section {
                     ForEach(registeredMembers) { member in
                         memberRow(member, subtitle: roleLabel(member.role))
                     }
+                } header: {
+                    Text("アカウントメンバー")
                 } footer: {
                     Text("招待コードで参加した正式メンバーです。")
                 }
             }
 
             if !manualMembers.isEmpty {
-                Section("手動登録メンバー") {
+                Section {
                     ForEach(manualMembers) { member in
                         NavigationLink {
                             ManualMemberEditView(member: member) {
@@ -44,6 +46,8 @@ struct CircleMembersView: View {
                             memberRow(member, subtitle: "手動登録")
                         }
                     }
+                } header: {
+                    Text("手動登録メンバー")
                 } footer: {
                     Text("アプリ未登録の常連メンバーです。出欠・レーティングの永続管理対象です。")
                 }
